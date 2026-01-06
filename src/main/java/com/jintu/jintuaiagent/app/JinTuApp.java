@@ -1,5 +1,6 @@
 package com.jintu.jintuaiagent.app;
 
+import com.jintu.jintuaiagent.advisor.MyLoggerAdvisor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
@@ -249,12 +250,12 @@ public class JinTuApp {
         InMemoryChatMemory inMemoryChatMemory = new InMemoryChatMemory();
         chatClient=ChatClient.builder(dashscopeChatModel)
                 .defaultSystem(SYSTEM_PROMPT)
-                .defaultAdvisors(new MessageChatMemoryAdvisor(inMemoryChatMemory))
+                .defaultAdvisors(new MessageChatMemoryAdvisor(inMemoryChatMemory),new MyLoggerAdvisor())
                 .build();
     }
 
     public String doChat(String message,String chatId){
-        ChatResponse response = chatClient.prompt().user(message).advisors(spec -> spec.param(CHAT_MEMORY_CONVERSATION_ID_KEY, chatId).param(CHAT_MEMORY_RETRIEVE_SIZE_KEY, 1)).call().chatResponse();
+        ChatResponse response = chatClient.prompt().user(message).advisors(spec -> spec.param(CHAT_MEMORY_CONVERSATION_ID_KEY, chatId).param(CHAT_MEMORY_RETRIEVE_SIZE_KEY, 10)).call().chatResponse();
         String content = response.getResult().getOutput().getText();
         log.info("content:{}",content);
         return content;
