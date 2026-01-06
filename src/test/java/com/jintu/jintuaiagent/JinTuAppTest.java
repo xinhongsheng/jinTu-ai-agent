@@ -34,4 +34,12 @@ public class JinTuAppTest {
         answer = jinTuApp.doChat(message,chatId);
         System.out.println("第三次："+answer);
     }
+
+    @Test
+    void TestWithReport(){
+        String chatId= UUID.randomUUID().toString();
+        String message = "你好，我是锦途开发人员Re,我遇到一个bug，不知道怎么解决？   ";
+        JinTuApp.jinTuReport jinTuReport = jinTuApp.doChatWithReport(message, chatId);
+
+    }
 }

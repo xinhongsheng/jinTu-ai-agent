@@ -9,6 +9,8 @@ import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
+
 import static org.springframework.ai.chat.client.advisor.AbstractChatMemoryAdvisor.CHAT_MEMORY_CONVERSATION_ID_KEY;
 import static org.springframework.ai.chat.client.advisor.AbstractChatMemoryAdvisor.CHAT_MEMORY_RETRIEVE_SIZE_KEY;
 
@@ -22,7 +24,7 @@ import static org.springframework.ai.chat.client.advisor.AbstractChatMemoryAdvis
 @Slf4j
 public class JinTuApp {
     private final ChatClient chatClient;
-    private static final String SYSTEM_PROMPT="" +
+    private static final String SYSTEM_PROMPT=
             "1) 目标用户群体与核心需求\n" +
             "A. 一线业务员工（销售/客服/运营/交付/门店等）\n" +
             "\n" +
@@ -260,4 +262,18 @@ public class JinTuApp {
         log.info("content:{}",content);
         return content;
     }
+    public record jinTuReport(String title, List<String> suggestions) {
+    }
+    public jinTuReport doChatWithReport(String message,String chatId){
+        jinTuReport jinTuReport=chatClient
+                .prompt()
+                .system(SYSTEM_PROMPT+"每次对话之后都要生成问题结果，标题为{用户名}的提问报告，内容为建议列表")
+                .user( message)
+                .advisors(spec -> spec.param(CHAT_MEMORY_CONVERSATION_ID_KEY, chatId).param(CHAT_MEMORY_RETRIEVE_SIZE_KEY, 10))
+                .call()
+                .entity(jinTuReport.class);
+        log.info("content:{}",jinTuReport);
+        return jinTuReport;
+    }
+
 }
