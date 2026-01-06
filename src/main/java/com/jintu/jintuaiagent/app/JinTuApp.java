@@ -1,6 +1,7 @@
 package com.jintu.jintuaiagent.app;
 
 import com.jintu.jintuaiagent.advisor.MyLoggerAdvisor;
+import com.jintu.jintuaiagent.chatmemory.FileBasedChatMemory;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
@@ -249,10 +250,15 @@ public class JinTuApp {
 
     public JinTuApp(ChatModel dashscopeChatModel) {
         //初始化基于内存的对话记忆
-        InMemoryChatMemory inMemoryChatMemory = new InMemoryChatMemory();
+//        InMemoryChatMemory inMemoryChatMemory = new InMemoryChatMemory();
+
+        //初始化基于文件的对话记忆
+        String filePath=System.getProperty("user.dir")+"/chat-memory";
+        FileBasedChatMemory fileBasedChatMemory = new FileBasedChatMemory(filePath);
         chatClient=ChatClient.builder(dashscopeChatModel)
                 .defaultSystem(SYSTEM_PROMPT)
-                .defaultAdvisors(new MessageChatMemoryAdvisor(inMemoryChatMemory),new MyLoggerAdvisor())
+//                .defaultAdvisors(new MessageChatMemoryAdvisor(inMemoryChatMemory),new MyLoggerAdvisor())
+                .defaultAdvisors(new MessageChatMemoryAdvisor(fileBasedChatMemory))
                 .build();
     }
 

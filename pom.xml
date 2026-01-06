@@ -83,7 +83,12 @@
             <artifactId>jsonschema-generator</artifactId>
             <version>4.38.0</version>
         </dependency>
-
+        <!-- kryo序列化库 -->
+        <dependency>
+            <groupId>com.esotericsoftware</groupId>
+            <artifactId>kryo</artifactId>
+            <version>5.6.2</version>
+        </dependency>
 
     </dependencies>
 
