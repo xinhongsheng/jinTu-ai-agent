@@ -42,4 +42,12 @@ public class JinTuAppTest {
         JinTuApp.jinTuReport jinTuReport = jinTuApp.doChatWithReport(message, chatId);
 
     }
+
+    @Test
+    void TestWithRag(){
+        String chatId= UUID.randomUUID().toString();
+        String message = "你好，锦途集团企业微信换手机后如何设置打卡常用设备是什么样的？ ";
+        String answer = jinTuApp.doChatWithRag(message, chatId);
+        System.out.println(" rag："+answer);
+    }
 }

@@ -2,12 +2,16 @@ package com.jintu.jintuaiagent.app;
 
 import com.jintu.jintuaiagent.advisor.MyLoggerAdvisor;
 import com.jintu.jintuaiagent.chatmemory.FileBasedChatMemory;
+import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
+import org.springframework.ai.chat.client.advisor.QuestionAnswerAdvisor;
+import org.springframework.ai.chat.client.advisor.api.Advisor;
 import org.springframework.ai.chat.memory.InMemoryChatMemory;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.chat.model.ChatResponse;
+import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -24,6 +28,12 @@ import static org.springframework.ai.chat.client.advisor.AbstractChatMemoryAdvis
 @Component
 @Slf4j
 public class JinTuApp {
+
+    @Resource
+    private VectorStore myVectorStore;
+    @Resource
+    private Advisor ragCloudAdvisor;
+
     private final ChatClient chatClient;
     private static final String SYSTEM_PROMPT=
             "1) 目标用户群体与核心需求\n" +
@@ -282,4 +292,22 @@ public class JinTuApp {
         return jinTuReport;
     }
 
+
+    public  String doChatWithRag(String message,String chatId) {
+        ChatResponse response = chatClient
+                .prompt()
+                .user(message)
+                .advisors(spec -> spec.param(CHAT_MEMORY_CONVERSATION_ID_KEY, chatId).param(CHAT_MEMORY_RETRIEVE_SIZE_KEY, 10))
+                //开启日志
+                .advisors(new MyLoggerAdvisor())
+                //应用知识库
+//                .advisors(new QuestionAnswerAdvisor(myVectorStore))
+                //应用云知识库
+                .advisors(ragCloudAdvisor)
+                .call()
+                .chatResponse();
+        String content = response.getResult().getOutput().getText();
+        log.info("content:{}",content);
+        return content;
+    }
 }
