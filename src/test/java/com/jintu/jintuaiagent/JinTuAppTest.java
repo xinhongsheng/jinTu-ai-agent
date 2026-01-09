@@ -2,6 +2,7 @@ package com.jintu.jintuaiagent;
 
 import com.jintu.jintuaiagent.app.JinTuApp;
 import jakarta.annotation.Resource;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
@@ -50,4 +51,16 @@ public class JinTuAppTest {
         String answer = jinTuApp.doChatWithRag(message, chatId);
         System.out.println(" rag："+answer);
     }
+
+
+    @Test
+    void doChatWithMcp() {
+        // 测试图片搜索 MCP
+        String message = "帮我搜索一些哄另一半开心的图片";
+        String chatId= UUID.randomUUID().toString();
+        String answer =  jinTuApp.doChatWithMcp(message, chatId);
+        Assertions.assertNotNull(answer);
+        System.out.println("MCP："+answer);
+    }
+
 }
