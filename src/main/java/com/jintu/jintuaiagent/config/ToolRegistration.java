@@ -19,7 +19,7 @@ public class ToolRegistration {
     @Value("${search.api.key:}")
     private String searchApiKey;
 
-    @Bean
+    @Bean("allTools")
     public ToolCallback[] allTools() {
         // 创建各个工具实例
         FileOperationTool fileOperationTool = new FileOperationTool();
