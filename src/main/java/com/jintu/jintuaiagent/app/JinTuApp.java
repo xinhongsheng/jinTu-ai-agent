@@ -338,6 +338,9 @@ public class JinTuApp {
                 .user(message)
                 .advisors(spec -> spec.param(CHAT_MEMORY_CONVERSATION_ID_KEY, chatId)
                         .param(CHAT_MEMORY_RETRIEVE_SIZE_KEY, 10))
+                .advisors(new MyLoggerAdvisor())
+                //应用云知识库
+                .advisors(ragCloudAdvisor)
                 .stream()
                 .content();
     }
