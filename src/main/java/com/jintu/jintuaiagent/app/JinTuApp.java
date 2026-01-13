@@ -6,9 +6,12 @@ import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
-import org.springframework.ai.chat.client.advisor.QuestionAnswerAdvisor;
+
 import org.springframework.ai.chat.client.advisor.api.Advisor;
-import org.springframework.ai.chat.memory.InMemoryChatMemory;
+
+import org.springframework.ai.chat.memory.ChatMemory;
+import org.springframework.ai.chat.memory.InMemoryChatMemoryRepository;
+import org.springframework.ai.chat.memory.MessageWindowChatMemory;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.tool.ToolCallbackProvider;
@@ -18,8 +21,6 @@ import reactor.core.publisher.Flux;
 
 import java.util.List;
 
-import static org.springframework.ai.chat.client.advisor.AbstractChatMemoryAdvisor.CHAT_MEMORY_CONVERSATION_ID_KEY;
-import static org.springframework.ai.chat.client.advisor.AbstractChatMemoryAdvisor.CHAT_MEMORY_RETRIEVE_SIZE_KEY;
 
 /**
  * @Author: 小辛同学
@@ -260,6 +261,15 @@ public class JinTuApp {
             "\n" +
             "冲突处理机制：同主题多份文档冲突时，以“制度编号/生效时间/发布部门”优先级决策。";
 
+
+
+    // 初始化基于内存的对话记忆
+    MessageWindowChatMemory chatMemory = MessageWindowChatMemory.builder()
+            .chatMemoryRepository(new InMemoryChatMemoryRepository())
+            .maxMessages(20)
+            .build();
+
+
     public JinTuApp(ChatModel dashscopeChatModel) {
         //初始化基于内存的对话记忆
 //        InMemoryChatMemory inMemoryChatMemory = new InMemoryChatMemory();
@@ -270,12 +280,13 @@ public class JinTuApp {
         chatClient=ChatClient.builder(dashscopeChatModel)
                 .defaultSystem(SYSTEM_PROMPT)
 //                .defaultAdvisors(new MessageChatMemoryAdvisor(inMemoryChatMemory),new MyLoggerAdvisor())
-                .defaultAdvisors(new MessageChatMemoryAdvisor(fileBasedChatMemory))
+                .defaultAdvisors(MessageChatMemoryAdvisor.builder(chatMemory).build())
                 .build();
     }
 
     public String doChat(String message,String chatId){
-        ChatResponse response = chatClient.prompt().user(message).advisors(spec -> spec.param(CHAT_MEMORY_CONVERSATION_ID_KEY, chatId).param(CHAT_MEMORY_RETRIEVE_SIZE_KEY, 10)).call().chatResponse();
+        ChatResponse response = chatClient.prompt().user(message).advisors(spec -> spec.param(ChatMemory.CONVERSATION_ID, chatId))
+                .call().chatResponse();
         String content = response.getResult().getOutput().getText();
         log.info("content:{}",content);
         return content;
@@ -287,7 +298,7 @@ public class JinTuApp {
                 .prompt()
                 .system(SYSTEM_PROMPT+"每次对话之后都要生成问题结果，标题为{用户名}的提问报告，内容为建议列表")
                 .user( message)
-                .advisors(spec -> spec.param(CHAT_MEMORY_CONVERSATION_ID_KEY, chatId).param(CHAT_MEMORY_RETRIEVE_SIZE_KEY, 10))
+                .advisors(spec -> spec.param(ChatMemory.CONVERSATION_ID, chatId))
                 .call()
                 .entity(jinTuReport.class);
         log.info("content:{}",jinTuReport);
@@ -299,7 +310,7 @@ public class JinTuApp {
         ChatResponse response = chatClient
                 .prompt()
                 .user(message)
-                .advisors(spec -> spec.param(CHAT_MEMORY_CONVERSATION_ID_KEY, chatId).param(CHAT_MEMORY_RETRIEVE_SIZE_KEY, 10))
+                .advisors(spec -> spec.param(ChatMemory.CONVERSATION_ID, chatId))
                 //开启日志
                 .advisors(new MyLoggerAdvisor())
                 //应用知识库
@@ -320,11 +331,10 @@ public class JinTuApp {
         ChatResponse response = chatClient
                 .prompt()
                 .user(message)
-                .advisors(spec -> spec.param(CHAT_MEMORY_CONVERSATION_ID_KEY, chatId)
-                        .param(CHAT_MEMORY_RETRIEVE_SIZE_KEY, 10))
+                .advisors(spec -> spec.param(ChatMemory.CONVERSATION_ID, chatId))
                 // 开启日志，便于观察效果
                 .advisors(new MyLoggerAdvisor())
-                .tools(toolCallbackProvider)
+                .toolCallbacks(toolCallbackProvider)
                 .call()
                 .chatResponse();
         String content = response.getResult().getOutput().getText();
@@ -336,8 +346,7 @@ public class JinTuApp {
         return chatClient
                 .prompt()
                 .user(message)
-                .advisors(spec -> spec.param(CHAT_MEMORY_CONVERSATION_ID_KEY, chatId)
-                        .param(CHAT_MEMORY_RETRIEVE_SIZE_KEY, 10))
+                .advisors(spec -> spec.param(ChatMemory.CONVERSATION_ID, chatId))
                 .advisors(new MyLoggerAdvisor())
                 //应用云知识库
                 .advisors(ragCloudAdvisor)

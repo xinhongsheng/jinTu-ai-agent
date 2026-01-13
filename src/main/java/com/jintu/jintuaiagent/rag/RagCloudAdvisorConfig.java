@@ -7,7 +7,7 @@ import com.jintu.jintuaiagent.advisor.MyLoggerAdvisor;
 import com.jintu.jintuaiagent.config.AliYunConfig;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.ai.chat.client.advisor.RetrievalAugmentationAdvisor;
+import org.springframework.ai.rag.advisor.RetrievalAugmentationAdvisor;
 import org.springframework.ai.chat.client.advisor.api.Advisor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -27,7 +27,7 @@ public class RagCloudAdvisorConfig {
     @Bean
     public Advisor ragCloudAdvisor(){
         String dashscopeApiKey = aliYunConfig.getApiKey();
-        DashScopeApi dashScopeApi = new DashScopeApi(dashscopeApiKey);
+        DashScopeApi dashScopeApi = DashScopeApi.builder().apiKey(dashscopeApiKey).build();
         final  String KNOWLEDGE_INDEX="锦途知识库";
         DashScopeDocumentRetriever documentRetriever = new DashScopeDocumentRetriever(dashScopeApi
                 , DashScopeDocumentRetrieverOptions.builder()

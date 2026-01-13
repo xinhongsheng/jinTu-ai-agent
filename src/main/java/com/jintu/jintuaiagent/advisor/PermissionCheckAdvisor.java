@@ -1,11 +1,11 @@
 package com.jintu.jintuaiagent.advisor;
 
-import org.springframework.ai.chat.client.advisor.api.AdvisedRequest;
-import org.springframework.ai.chat.client.advisor.api.AdvisedResponse;
-import org.springframework.ai.chat.client.advisor.api.CallAroundAdvisor;
-import org.springframework.ai.chat.client.advisor.api.CallAroundAdvisorChain;
-import org.springframework.ai.chat.client.advisor.api.StreamAroundAdvisor;
-import org.springframework.ai.chat.client.advisor.api.StreamAroundAdvisorChain;
+import org.springframework.ai.chat.client.ChatClientRequest;
+import org.springframework.ai.chat.client.ChatClientResponse;
+import org.springframework.ai.chat.client.advisor.api.CallAdvisor;
+import org.springframework.ai.chat.client.advisor.api.CallAdvisorChain;
+import org.springframework.ai.chat.client.advisor.api.StreamAdvisor;
+import org.springframework.ai.chat.client.advisor.api.StreamAdvisorChain;
 import reactor.core.publisher.Flux;
 
 import java.util.Arrays;
@@ -18,7 +18,7 @@ import java.util.Set;
  * 权限校验
  * Expects user permissions in request userParams.
  */
-public class PermissionCheckAdvisor implements CallAroundAdvisor, StreamAroundAdvisor {
+public class PermissionCheckAdvisor implements CallAdvisor, StreamAdvisor {
 
     public static final String USER_PERMISSIONS_KEY = "userPermissions";
     public static final String USER_ROLE_KEY = "userRole";
@@ -31,15 +31,15 @@ public class PermissionCheckAdvisor implements CallAroundAdvisor, StreamAroundAd
     }
 
     @Override
-    public AdvisedResponse aroundCall(AdvisedRequest advisedRequest, CallAroundAdvisorChain chain) {
-        checkPermission(advisedRequest);
-        return chain.nextAroundCall(advisedRequest);
+    public ChatClientResponse adviseCall(ChatClientRequest chatClientRequest, CallAdvisorChain chain) {
+        checkPermission(chatClientRequest);
+        return chain.nextCall(chatClientRequest);
     }
 
     @Override
-    public Flux<AdvisedResponse> aroundStream(AdvisedRequest advisedRequest, StreamAroundAdvisorChain chain) {
-        checkPermission(advisedRequest);
-        return chain.nextAroundStream(advisedRequest);
+    public Flux<ChatClientResponse> adviseStream(ChatClientRequest chatClientRequest, StreamAdvisorChain chain) {
+        checkPermission(chatClientRequest);
+        return chain.nextStream(chatClientRequest);
     }
 
     @Override
@@ -52,23 +52,23 @@ public class PermissionCheckAdvisor implements CallAroundAdvisor, StreamAroundAd
         return this.getClass().getSimpleName();
     }
 
-    private void checkPermission(AdvisedRequest advisedRequest) {
-        if (!hasPermission(advisedRequest)) {
+    private void checkPermission(ChatClientRequest chatClientRequest) {
+        if (!hasPermission(chatClientRequest)) {
             throw new IllegalStateException("Permission denied: " + requiredPermission);
         }
     }
 
-    private boolean hasPermission(AdvisedRequest advisedRequest) {
+    private boolean hasPermission(ChatClientRequest chatClientRequest) {
         if (requiredPermission == null || requiredPermission.isBlank()) {
             return true;
         }
 
-        Object role = advisedRequest.userParams().get(USER_ROLE_KEY);
+        Object role = chatClientRequest.context().get(USER_ROLE_KEY);
         if (ADMIN_ROLE.equalsIgnoreCase(Objects.toString(role, ""))) {
             return true;
         }
 
-        Object rawPermissions = advisedRequest.userParams().get(USER_PERMISSIONS_KEY);
+        Object rawPermissions = chatClientRequest.context().get(USER_PERMISSIONS_KEY);
         Set<String> permissions = normalizePermissions(rawPermissions);
         return permissions.contains(requiredPermission);
     }

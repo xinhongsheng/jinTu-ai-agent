@@ -28,12 +28,38 @@
                 <enabled>false</enabled>
             </snapshots>
         </repository>
+            <repository>
+                <id>spring-snapshots</id>
+                <name>Spring Snapshots</name>
+                <url>https://repo.spring.io/snapshot</url>
+                <releases>
+                    <enabled>false</enabled>
+                </releases>
+            </repository>
+            <repository>
+                <name>Central Portal Snapshots</name>
+                <id>central-portal-snapshots</id>
+                <url>https://central.sonatype.com/repository/maven-snapshots/</url>
+                <releases>
+                    <enabled>false</enabled>
+                </releases>
+                <snapshots>
+                    <enabled>true</enabled>
+                </snapshots>
+            </repository>
     </repositories>
+
 
     <dependencies>
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.ai</groupId>
+            <artifactId>spring-ai-starter-mcp-server-webmvc</artifactId>
+            <version>1.0.0</version>
         </dependency>
 
         <dependency>
@@ -66,11 +92,6 @@
             <version>2.19.1</version>
         </dependency>
         <!--spring AI -->
-        <dependency>
-            <groupId>com.alibaba.cloud.ai</groupId>
-            <artifactId>spring-ai-alibaba-starter</artifactId>
-            <version>1.0.0-M6.1</version>
-        </dependency>
         <!-- https://mvnrepository.com/artifact/dev.langchain4j/langchain4j-community-dashscope -->
         <dependency>
             <groupId>dev.langchain4j</groupId>
@@ -90,16 +111,19 @@
             <version>5.6.2</version>
         </dependency>
         <!--ETL 文档提取 -->
+<!--        <dependency>-->
+<!--            <groupId>org.springframework.ai</groupId>-->
+<!--            <artifactId>spring-ai-tika-document-reader</artifactId>-->
+<!--            <version>1.0.0</version>-->
+<!--        </dependency>-->
         <dependency>
             <groupId>org.springframework.ai</groupId>
             <artifactId>spring-ai-tika-document-reader</artifactId>
-            <version>1.0.0</version>
         </dependency>
         <!--pgvector -->
         <dependency>
             <groupId>org.springframework.ai</groupId>
             <artifactId>spring-ai-starter-vector-store-pgvector</artifactId>
-            <version>1.0.0-M7</version>
         </dependency>
 
         <dependency>
@@ -111,11 +135,15 @@
             <artifactId>postgresql</artifactId>
             <scope>runtime</scope>
         </dependency>
-        <dependency>
-            <groupId>org.springframework.ai</groupId>
-            <artifactId>spring-ai-pgvector-store</artifactId>
-            <version>1.0.0-M6</version>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>org.springframework.ai</groupId>-->
+<!--            <artifactId>spring-ai-pgvector-store</artifactId>-->
+<!--            <version>1.0.0-M6</version>-->
+<!--        </dependency>-->
+                <dependency>
+                    <groupId>org.springframework.ai</groupId>
+                    <artifactId>spring-ai-pgvector-store</artifactId>
+                </dependency>
         <!-- jsoup  -->
         <dependency>
             <groupId>org.jsoup</groupId>
@@ -123,11 +151,15 @@
             <version>1.19.1</version>
         </dependency>
         <!-- mcp_client-->
-        <dependency>
-            <groupId>org.springframework.ai</groupId>
-            <artifactId>spring-ai-mcp-client-spring-boot-starter</artifactId>
-            <version>1.0.0-M6</version>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>org.springframework.ai</groupId>-->
+<!--            <artifactId>spring-ai-mcp-client-spring-boot-starter</artifactId>-->
+<!--            <version>1.0.0-M6</version>-->
+<!--        </dependency>-->
+                <dependency>
+                    <groupId>org.springframework.ai</groupId>
+                    <artifactId>spring-ai-starter-mcp-client</artifactId>
+                </dependency>
 
         <!-- iText PDF 生成库 -->
         <dependency>
@@ -137,7 +169,40 @@
             <type>pom</type>
         </dependency>
 
+
+        <!-- 更新Spring Ai基础依赖 -->
+            <dependency>
+                <groupId>com.alibaba.cloud.ai</groupId>
+                <artifactId>spring-ai-alibaba-starter-dashscope</artifactId>
+            </dependency>
+
+    <!-- 更新QuestionAnswerAdvisor  -->
+        <dependency>
+            <groupId>org.springframework.ai</groupId>
+            <artifactId>spring-ai-advisors-vector-store</artifactId>
+        </dependency>
+
     </dependencies>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>com.alibaba.cloud.ai</groupId>
+                <artifactId>spring-ai-alibaba-bom</artifactId>
+                <version>1.0.0.2</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework.ai</groupId>
+                <artifactId>spring-ai-bom</artifactId>
+                <version>1.0.0</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
 
     <build>
         <plugins>

@@ -3,6 +3,11 @@ spring:
     active: dev
   application:
     name: jinTu-ai-agent
+  main:
+    allow-bean-definition-overriding: true
+  autoconfigure:
+    exclude:
+      - com.alibaba.cloud.ai.autoconfigure.dashscope.DashScopeAutoConfiguration
 server:
   port: 8123
   servlet:
