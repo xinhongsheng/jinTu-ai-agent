@@ -20,33 +20,34 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * 处理工具调用的基础代理类，具体实现了 think 和 act 方法，可以用作创建实例的父类  
- */  
+ * 处理工具调用的基础代理类，具体实现了 think 和 act 方法，可以用作创建实例的父类
+ */
 @EqualsAndHashCode(callSuper = true)
 @Data
 @Slf4j
-public class ToolCallAgent extends ReActAgent {  
-  
-    // 可用的工具  
+public class ToolCallAgent extends ReActAgent {
+
+    // 可用的工具
     private final ToolCallback[] availableTools;
-  
-    // 保存了工具调用信息的响应  
+
+    // 保存了工具调用信息的响应
     private ChatResponse toolCallChatResponse;
-  
-    // 工具调用管理者  
+
+    // 工具调用管理者
     private final ToolCallingManager toolCallingManager;
-  
-    // 禁用内置的工具调用机制，自己维护上下文  
+
+    // 禁用内置的工具调用机制，自己维护上下文
     private final ChatOptions chatOptions;
-  
-    public ToolCallAgent(ToolCallback[] availableTools) {  
-        super();  
-        this.availableTools = availableTools;  
-        this.toolCallingManager = ToolCallingManager.builder().build();  
-        // 禁用 Spring AI 内置的工具调用机制，自己维护选项和消息上下文  
+
+    public ToolCallAgent(ToolCallback[] availableTools) {
+        super();
+        this.availableTools = availableTools;
+        this.toolCallingManager = ToolCallingManager.builder().build();
+        // 禁用 Spring AI 内置的工具调用机制，自己维护选项和消息上下文
         this.chatOptions = DashScopeChatOptions.builder()
                 .withInternalToolExecutionEnabled(false)
-                .build();  
+                .build();
+        log.info("ToolCallAgent initialized with {} tools.", availableTools != null ? availableTools.length : 0);
     }
 
     /**
@@ -66,7 +67,7 @@ public class ToolCallAgent extends ReActAgent {
             // 获取带工具选项的响应
             ChatResponse chatResponse = getChatClient().prompt(prompt)
                     .system(getSystemPrompt())
-                    .tools(availableTools)
+                    .toolCallbacks(availableTools)
                     .call()
                     .chatResponse();
             // 记录响应，用于 Act
@@ -80,13 +81,14 @@ public class ToolCallAgent extends ReActAgent {
             String toolCallInfo = toolCallList.stream()
                     .map(toolCall -> String.format("工具名称：%s，参数：%s",
                             toolCall.name(),
-                            toolCall.arguments())
-                    )
+                            toolCall.arguments()))
                     .collect(Collectors.joining("\n"));
             log.info(toolCallInfo);
             if (toolCallList.isEmpty()) {
                 // 只有不调用工具时，才记录助手消息
                 getMessageList().add(assistantMessage);
+                // 没有工具调用,说明任务已完成,将状态设置为完成
+                setState(AgentState.FINISHED);
                 return false;
             } else {
                 // 需要调用工具时，无需记录助手消息，因为调用工具时会自动记录
@@ -99,7 +101,6 @@ public class ToolCallAgent extends ReActAgent {
             return false;
         }
     }
-
 
     /**
      * 执行工具调用并处理结果
@@ -117,11 +118,13 @@ public class ToolCallAgent extends ReActAgent {
         // 记录消息上下文，conversationHistory 已经包含了助手消息和工具调用返回的结果
         setMessageList(toolExecutionResult.conversationHistory());
         // 当前工具调用的结果
-        ToolResponseMessage toolResponseMessage = (ToolResponseMessage) CollUtil.getLast(toolExecutionResult.conversationHistory());
+        ToolResponseMessage toolResponseMessage = (ToolResponseMessage) CollUtil
+                .getLast(toolExecutionResult.conversationHistory());
         String results = toolResponseMessage.getResponses().stream()
                 .map(response -> "工具 " + response.name() + " 完成了它的任务！结果: " + response.responseData())
                 .collect(Collectors.joining("\n"));
-        boolean terminateToolCalled = toolResponseMessage.getResponses().stream().anyMatch(response -> "doTerminate".equals(response.name()));
+        boolean terminateToolCalled = toolResponseMessage.getResponses().stream()
+                .anyMatch(response -> "doTerminate".equals(response.name()));
         if (terminateToolCalled) {
             setState(AgentState.FINISHED);
         }
